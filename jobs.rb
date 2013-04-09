@@ -67,7 +67,7 @@ class FetchArticle
     author = "--authors='#{doc["author"]}'"
     series = "--series='#{doc["domain"]}'"
     run_string = "ebook-convert #{in_path} #{out_path} #{title} #{author} #{series}"
-    error = `ebook-convert #{in_path} #{out_path} #{title} #{author} #{series}`
+    error = `#{run_string}`
     raise "#{run_string}\n#{error}\n#{doc}" if $?.exitstatus != 0
   end
 
