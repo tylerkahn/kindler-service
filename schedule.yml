@@ -1,0 +1,11 @@
+fetch_emails:
+    every: '15s'
+    class: FetchEmails
+    queue: fetch_emails
+    description: "Fetch and queue emails every 15 seconds"
+
+clean_up_old_files:
+    every: '12h'
+    class: CleanUpOldFiles
+    queue: email
+    description: "Delete files which should no longer be cached"

@@ -1,0 +1,38 @@
+readability_api_token: abc123
+
+email_name: Kindler
+email_address: agmailaccount+kindler@gmail.com
+
+# Note that the process of fetching an email via pop
+# will tell the server to delete that email.
+
+# You should create a filter that will trash
+# emails that contain email_address in the subject line.
+# This prevents a feedback loop.
+
+smtp_options:
+  address: smtp.gmail.com
+  domain: gmail.com
+  port: 587
+  authentication: plain
+  user_name: mygmailaccount@gmail.com
+  password: mypassword
+  enable_starttls_auto: Yes
+
+pop_options:
+  address: pop.gmail.com
+  port: 995
+  user_name: mygmailaccount@gmail.com
+  password: mypassword
+  enable_ssl: Yes
+
+files_path: files
+cache_days: 3
+
+pid_file: .resque-workers
+redis: localhost:6379:2
+log_file: kindler.log
+
+email_workers: 1
+fetch_articles_workers: 1
+fetch_emails_workers: 1
