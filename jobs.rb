@@ -14,7 +14,7 @@ class FetchEmails
   def self.perform
     $mailer.fetch_mail.each do |email|
 
-      from_email = self.sender_email(email)
+      from_email = self.extract_sender_email(email)
       urls = URI.extract(email.body.decoded, ["http","https"])
       details = self.extract_details(email.body.decoded)
 
@@ -43,7 +43,7 @@ class FetchEmails
     end
   end
 
-  def self.sender_email(email)
+  def self.extract_sender_email(email)
     email.sender.nil? ? email.from.to_a.first : email.sender.address
   end
 end
@@ -54,7 +54,7 @@ class FetchArticle
   def self.perform(from_email, to_email, article_url, details)
     out_path = File.join($cfg['files_path'], Digest::SHA1.hexdigest(article_url) << ".mobi")
     if not File.exists? out_path
-      self.convert(from_email, article_url, out_path)
+      self.convert(from_email, article_url, out_path, details)
     end
     Resque.enqueue(EmailArticle, to_email, out_path)
     Resque.enqueue(EmailNotice, from_email, "Sent #{article_url}")
