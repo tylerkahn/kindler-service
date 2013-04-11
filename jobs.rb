@@ -16,6 +16,7 @@ class FetchEmails
 
       from_email = self.sender_email(email)
       urls = URI.extract(email.body.decoded, ["http","https"])
+      details = self.extract_details(email.body.decoded)
 
       if email.subject.empty?
         Resque.enqueue(EmailFailure, from_email,
@@ -25,8 +26,20 @@ class FetchEmails
                        "Couldn't find a link to fetch for you.")
       else
         email.subject << "@kindle.com" unless /@/ =~ email.subject
-        Resque.enqueue(FetchArticle, from_email, email.subject, urls.first)
+        Resque.enqueue(FetchArticle, from_email, email.subject, urls.first, details)
       end
+    end
+  end
+
+  def self.extract_details(body)
+    if /--\*/ =~ body
+      details_text = body.split('--*').last
+      details_text.scan(/(\w+):(.*)[\n\r]*/).reduce(Hash.new) do |x,y|
+        key, val = y
+        x.merge(key => val.strip)
+      end
+    else
+      Hash.new
     end
   end
 
@@ -38,7 +51,7 @@ end
 class FetchArticle
   @queue = :fetch_articles
 
-  def self.perform(from_email, to_email, article_url)
+  def self.perform(from_email, to_email, article_url, details)
     out_path = File.join($cfg['files_path'], Digest::SHA1.hexdigest(article_url) << ".mobi")
     if not File.exists? out_path
       self.convert(from_email, article_url, out_path)
@@ -47,9 +60,10 @@ class FetchArticle
     Resque.enqueue(EmailNotice, from_email, "Sent #{article_url}")
   end
 
-  def self.convert(from_email, article_url, out_path)
+  def self.convert(from_email, article_url, out_path, supplied_details)
     begin
       doc = self.get_article_details(article_url)
+      doc = self.merge_details(doc, supplied_details)
       Tempfile.open(["kindlerapp", ".html"]) do |f|
         f.write(doc["content"])
         f.flush
@@ -62,11 +76,23 @@ class FetchArticle
     end
   end
 
+  def self.merge_details(auto_details, supplied_details)
+    filtered_details = {
+      "author" => supplied_details["author"] || supplied_details["authors"],
+      "title" => supplied_details["title"]
+    }
+
+    # supplied details take presedence unless nil
+    auto_details.merge(filtered_details) do |key, oldval, newval|
+      newval || oldval
+    end
+  end
+
   def self.run_convert(in_path, out_path, doc)
     title = "--title='#{doc["title"]}'"
     author = "--authors='#{doc["author"]}'"
     series = "--series='#{doc["domain"]}'"
-    run_string = "ebook-convert #{in_path} #{out_path} #{title} #{author} #{series}"
+    run_string = "ebook-convert #{[in_path, out_path, title, author, series].shelljoin}"
     error = `#{run_string}`
     raise "#{run_string}\n#{error}\n#{doc}" if $?.exitstatus != 0
   end
