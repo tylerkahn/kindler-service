@@ -1,0 +1,4 @@
+.resque-workers
+files/
+kindler.log
+config.yml
