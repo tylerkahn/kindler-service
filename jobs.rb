@@ -33,6 +33,10 @@ class FetchEmails
 
   def self.extract_details(body)
     if /--\*/ =~ body
+      if body[-1] == '='
+        # email body may have unintended '=' at the last character position
+        body = body[0..-2]
+      end
       details_text = body.split('--*').last
       details_text.scan(/(\w+):(.*)[\n\r]*/).reduce(Hash.new) do |x,y|
         key, val = y
