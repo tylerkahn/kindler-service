@@ -64,6 +64,26 @@ describe FetchEmails, ".extract_details" do
       "authors" => "An Author, Another Author"}
   end
 
+  it "returns multiple details and ignores extraneous lines" do
+    body = <<-BODY
+    http://nytim.es/some-article/about/whatever
+
+    Sent from my iPhone
+    --*
+    title: hello: world
+    asdfjh
+    abc:
+    authors: An Author, Another Author
+    asdfjh akdjsfh
+    BODY
+    details = FetchEmails.extract_details(body)
+    details.should == {
+      "title" => "hello: world",
+      "authors" => "An Author, Another Author",
+      "abc" => ""}
+
+  end
+
   it "ignores extra sentinels" do
   body = <<-BODY
     http://nytim.es/some-article/about/whatever
