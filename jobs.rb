@@ -40,7 +40,7 @@ class FetchEmails
       details_text = body.split('--*').last
       details_text.scan(/(\w+):(.*)[\n\r]*/).reduce(Hash.new) do |x,y|
         key, val = y
-        x.merge(key => val.strip)
+        x.merge(key.downcase => val.strip)
       end
     else
       Hash.new

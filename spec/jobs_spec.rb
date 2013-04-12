@@ -36,6 +36,18 @@ describe FetchEmails, ".extract_details" do
     details = FetchEmails.extract_details(body)
     details.should == {"title" => "hello: world"}
   end
+  it "downcases the keys" do
+    body = <<-BODY
+    http://nytim.es/some-article/about/whatever
+
+    Sent from my iPhone
+    --*
+    Title: hello: world
+    BODY
+    details = FetchEmails.extract_details(body)
+    details.should == {"title" => "hello: world"}
+  end
+
 
   it "returns multiple details" do
     body = <<-BODY
