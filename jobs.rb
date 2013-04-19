@@ -117,7 +117,7 @@ class EmailNotice
   @queue = :email
 
   def self.perform(to_email, notice)
-    $mailer.deliver_notice(to_email, "Kindler App", notice)
+    $mailer.deliver_notice(to_email, "Kindler", notice)
   end
 
 end
@@ -126,7 +126,7 @@ class EmailFailure
   @queue = :email
 
   def self.perform(to_email, notice)
-    $mailer.deliver_notice(to_email, "Kindler App Failure",  notice)
+    $mailer.deliver_notice(to_email, "Kindler Failure",  notice)
   end
 
 end
